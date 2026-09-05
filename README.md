@@ -30,8 +30,26 @@ For more details, visit the [uv documentation](https://docs.astral.sh/uv/).
 - `my_claudecode.ipynb` - Tool definitions for directory, file, and package operations
 - `dataframe_example.py` - Pandas DataFrame creation example
 
----
-
 ![Claude Code Overview](./images/screenshots/Screenshot-1-Claude_code.png)
 
 *Figure: Claude Code environment with LLM integrations and tool execution*
+
+
+---
+
+### 1. Agent-Driven Project Automation
+Created `my_claudecode.ipynb` to demonstrate practical agent automation. Built a ReAct agent using LangGraph that binds three custom tools:
+- **create_directory**: Creates directories programmatically
+- **create_file**: Writes Python code to files
+- **install_package**: Installs Python packages via pip
+
+Following the project standards defined in `CLAUDE.md`, the agent orchestrated these tools to create `my_project/dataframe.py` — a well-structured pandas DataFrame generator with 3 columns and 5 rows, automatically installing dependencies as needed. The generated code adheres to PEP 8 standards, uses clear variable naming (`snake_case`), and includes type hints and docstrings as specified in the project's coding guidelines.
+
+### 2. API Data Fetching & Logging
+Implemented the **fetch-api skill** to handle external data integration:
+- Fetches CSV data from remote GitHub repositories using async httpx
+- Automatically creates timestamped directories (`YYYY-MM-DD_HH-MM-SS` format) in `.claude/skills/fetch-api/data/`
+- Stores fetched data as CSV files for downstream processing
+- Generates detailed logs in `.claude/skills/fetch-api/logs/` tracking API calls, success/failure status, and error details
+
+---
