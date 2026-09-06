@@ -52,4 +52,16 @@ Implemented the **fetch-api skill** to handle external data integration:
 - Stores fetched data as CSV files for downstream processing
 - Generates detailed logs in `.claude/skills/fetch-api/logs/` tracking API calls, success/failure status, and error details
 
+### 3. Data Migration Using Claude Skills
+Implemented the **migrate skill** to convert and manage data formats:
+- Automatically locates the latest timestamped folder in `.claude/skills/fetch-api/data/`
+- Converts CSV files to Parquet format using pandas and PyArrow for improved compression and query performance
+- Creates organized output in `.claude/skills/migrate/data/` maintaining the same folder structure
+- Successfully migrated 2 data files on 2026-09-06:
+  - `dim_customer.csv` → `dim_customer.parquet` (40 rows, 7.32 KB)
+  - `fact_sales.csv` → `fact_sales.parquet` (7173 rows, 140.16 KB)
+- Provides detailed logging with file sizes and row counts for each conversion
+![Claude code with skills](./images/screenshots/Screenshot-2-SKILLS-migration.png)
+
+*Figure: Extension of Claude Code with skills (data migration)*
 ---
