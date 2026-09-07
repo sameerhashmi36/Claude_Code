@@ -1,0 +1,3 @@
+- [Recurring Code Review Patterns](review_patterns.md) — 10 patterns observed in project code (bare exceptions, path mismatches, hardcoded paths, type hints, etc.)
+- [Standards Compliance Gaps](standards_compliance_gaps.md) — Project requires type hints and comprehensive error handling but scripts consistently lack them; treat as CRITICAL
+- [Data Script Patterns](data_script_patterns.md) — Common anti-patterns in pandas/matplotlib scripts (hardcoded paths, non-reproducible randomness, fragile logic, repeated code)
