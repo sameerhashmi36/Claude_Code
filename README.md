@@ -124,3 +124,61 @@ Orchestrated an end-to-end data pipeline combining fetch-api and migrate skills:
    - Error handling and detailed reporting for each step
 
 ---
+
+### 6. Airflow Project Documentation (2026-09-15):
+
+Created a comprehensive **Apache Airflow project** demonstrating asset-based scheduling with producer and consumer DAGs. Claude assisted in generating the `./airflow_project/README.md` by:
+
+1. **Analyzing DAG Structure**: Examined `data_fetch.py` and `data_report.py` to understand task dependencies and asset outlets
+2. **Documenting Concepts**: Provided clear explanations of Airflow fundamentals (DAGs, tasks, operators, executors, assets)
+3. **Creating Workflow Diagrams**: Generated ASCII visualizations of task dependencies and data flow
+4. **Setup Instructions**: Wrote step-by-step installation and execution guides with code examples
+5. **Asset-Based Scheduling**: Documented modern scheduling patterns using data availability instead of cron schedules
+
+**Key Documentation Elements**:
+- Overview of Apache Airflow concepts and architecture
+- Detailed task breakdown for `data_fetch` (producer) and `data_report` (consumer) DAGs
+- Complete setup, installation, and running instructions
+- Asset-based scheduling benefits and best practices
+- File locations and project structure
+
+This approach ensures anyone reading the airflow_project README can understand the entire workflow, from DAG design to execution.
+
+---
+
+## Using the `/btw` Command
+
+**What is `/btw`?**
+
+`/btw` (short for "by the way") is a Claude Code command that allows you to ask **side questions or tangential topics** without interrupting your main workflow. Instead of breaking context or starting a new conversation, you can ask Claude about related topics in the same session.
+
+**Purpose**:
+- Ask clarifying questions about concepts you encounter
+- Get quick explanations on tangential topics
+- Maintain conversation flow while exploring related ideas
+- Keep your main task's context intact
+
+**How to Use**:
+
+In Claude Code, type `/btw` followed by your side question:
+
+```
+/btw What's the difference between asset-based scheduling and time-based scheduling in Airflow?
+```
+
+Claude will answer your side question while keeping track of your main task context, so you can smoothly return to what you were working on.
+
+**Example Workflow**:
+```
+Main task: Writing Airflow documentation
+↓
+You ask: /btw Can you explain what outlets mean in Airflow?
+↓
+Claude answers your side question
+↓
+You continue: Can we add that explanation to the README?
+```
+
+This keeps conversations organized, reduces context-switching, and makes it easier to learn as you build.
+
+---
