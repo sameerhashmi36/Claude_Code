@@ -182,3 +182,64 @@ You continue: Can we add that explanation to the README?
 This keeps conversations organized, reduces context-switching, and makes it easier to learn as you build.
 
 ---
+
+## Scheduling with Claude Code
+
+**What is Claude Code Scheduling?**
+
+Claude Code provides powerful scheduling capabilities through two complementary features:
+
+1. **`/loop` Command**: Run a prompt repeatedly on a fixed interval or dynamically based on events
+   - Fixed-interval mode: `1m /your-prompt` runs every minute
+   - Dynamic mode: `/loop /your-prompt` (no interval) lets Claude self-pace based on task progress
+   
+2. **CronCreate**: Schedule tasks using standard 5-field cron expressions for precise timing
+   - Example: `"0 9 * * *"` runs at 9am daily (local timezone)
+   - Automatically fired by the scheduler; tasks expire after 7 days
+
+**How to Use Scheduling**
+
+### Fixed-Interval Loops
+```
+/loop 5m /code-review --check branch
+```
+This runs `/code-review --check branch` every 5 minutes. The loop continues until you stop it manually.
+
+### Dynamic Self-Pacing Loops
+```
+/loop check the deploy
+```
+Claude self-paces iterations — deciding when to check next based on what changed (e.g., if a deploy is in progress, it checks more frequently; when idle, it waits longer).
+
+### One-Shot Reminders
+Schedule a task for a specific time using the CronCreate tool directly:
+- `0 14 * * *` = 2:00 PM every day
+- `30 8 * * 1-5` = 8:30 AM on weekdays (Monday-Friday)
+
+**How to Stop a Cron Job**
+
+When you schedule a task with `/loop` or CronCreate, you get a **job ID**. To cancel it:
+
+```
+/cron delete <job_id>
+```
+
+Or use the CronDelete tool with the job ID returned when the task was created.
+
+**Example Output**:
+```
+Scheduled recurring job 43b4383a (Every minute). 
+Session-only (not written to disk, dies when Claude exits). 
+Auto-expires after 7 days. 
+Use CronDelete to cancel sooner.
+```
+
+To stop job `43b4383a`, call: `CronDelete(job_id="43b4383a")`
+
+**Important Notes**:
+- Jobs are **session-only** — they disappear when Claude exits (no persistent storage)
+- Recurring tasks **auto-expire after 7 days** (this is a safety feature)
+- The scheduler adds small jitter (up to 10% of the period late) to avoid thundering herd at :00/:30
+- Jobs only fire when the REPL is idle, not during active prompts
+
+---
