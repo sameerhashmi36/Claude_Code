@@ -1,0 +1,3 @@
+Hello World
+
+check hooks that pre_script.txt and post_script.txt has been create inside .claude/hooks/

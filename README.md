@@ -290,387 +290,156 @@ Cursor acts as a bridge between Claude and your code editor:
 
 ## MCP Servers in Claude Code
 
-**MCP** (Model Context Protocol) is a framework that lets Claude interact with external systems — databases, APIs, file systems, dev tools — by connecting to specialized servers that expose capabilities as **tools**.
+**MCP** (Model Context Protocol) lets Claude interact with external tools — web search, browser automation, git, databases, etc.
 
-### What are MCP Servers?
+### Quick Start
 
-MCP servers are lightweight programs that:
-- Expose **resources** (files, data sources Claude can read)
-- Expose **tools** (functions Claude can call to perform actions)
-- Run locally (on your machine) or remotely (via HTTP/SSE)
-- Connect to Claude Code, Claude Desktop, or the Claude API
-
-Think of them as **plugins that extend Claude's abilities** beyond just text. Instead of manually copying output, Claude can directly interact with:
-- Your Git repository
-- Databases
-- APIs (GitHub, Slack, weather, etc.)
-- Web browsers (screenshot pages, fill forms)
-- File systems (index large codebases)
-
-### How MCP Works - Visual Flow
-
-```
-Your Terminal (Claude Code)
-         ↓
-    [You ask Claude a question]
-         ↓
-  Claude Code detects you need external tools
-         ↓
-  Sends request to MCP Server(s)
-         ↓
-MCP Server talks to the actual service
-  (Git repo, Database, API, Playwright, etc.)
-         ↓
-  Server returns results to Claude
-         ↓
-Claude processes & shows you the answer
+1. **Create `.mcp.json`** in your project root:
+```json
+{
+  "mcpServers": {
+    "search": {
+      "command": "uvx",
+      "args": ["duckduckgo-mcp-server"]
+    }
+  }
+}
 ```
 
-**Example**: You ask "Show me git commits from this week"
-1. Claude Code sends this request to the Git MCP server
-2. Git server runs `git log --since="7 days ago"`
-3. Returns the commit list to Claude
-4. Claude formats it nicely for you
-
-### Types of MCP Servers
-
-**1. Stdio Servers (Local)**
-- Run as child processes directly on your machine
-- Communicate via JSON-RPC over stdin/stdout
-- No network overhead, fastest
-- Examples: git helper, local database client, file indexer
-
-**2. HTTP/SSE Servers (Remote or Local Web Service)**
-- Run as web services (could be local `localhost:8000` or remote cloud)
-- Use HTTP requests + Server-Sent Events for streaming
-- Good for: cloud APIs, shared team servers
-- Examples: GitHub API wrapper, Slack integration, OpenWeather
-
-**3. Plugin-bundled Servers (Built-in)**
-- Included with Claude Code plugins
-- Example: `plugin:playwright:playwright` (web automation tool)
-- Just enable the plugin, server connects automatically
-
-### Step-by-Step: Setting Up MCP Servers
-
-#### Step 1: Create or Edit `.mcp.json` in Your Project Root
-
-Create a file named `.mcp.json` at the root of your project (same level as `.git/`):
-
+2. **Use it**:
 ```bash
-cd /home/sameer/Documents/Claude_Code
-touch .mcp.json
+$ claude code
+> Search for Python tutorials
+[Claude uses DuckDuckGo to find results]
 ```
 
-#### Step 2: Add a Server Configuration
+### Available Servers
 
-Here's a **complete beginner example** with multiple server types:
+| Server | Install | Use Case |
+|--------|---------|----------|
+| **duckduckgo** | `uvx duckduckgo-mcp-server` | Web search & fetch articles |
+| **playwright** | `npx @playwright/mcp@latest` | Open websites, take screenshots, automation |
+| **tavily** | Built-in (requires API key) | AI-powered web search & research |
+| **git** | `python -m mcp_server_git` | Git commits, diffs, logs |
+| **sqlite** | `python -m mcp_server_sqlite --db-path ./data.db` | Query databases |
+| **github** | `npm install -g @anthropics/mcp-server-github` | GitHub issues & PRs |
 
+Find more: [anthropics/mcp-servers](https://github.com/anthropics/mcp-servers) · [Smithery.ai](https://smithery.ai) · [GitHub search](https://github.com/search?q=topic:mcp-server)
+
+### `.mcp.json` Format
+
+```json
+{
+  "mcpServers": {
+    "search": {                      // Server name (you choose)
+      "command": "uvx",              // Executable
+      "args": ["duckduckgo-mcp-server"],  // Arguments
+      "env": {                        // Optional: secrets
+        "API_KEY": "your-key"
+      }
+    }
+  }
+}
+```
+
+### Common Configurations
+
+**Web Search** (DuckDuckGo):
+```json
+{
+  "mcpServers": {
+    "search": {
+      "command": "uvx",
+      "args": ["duckduckgo-mcp-server"]
+    }
+  }
+}
+```
+
+**Browser Automation** (Playwright):
+```json
+{
+  "mcpServers": {
+    "browser": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}
+```
+
+**Git Operations**:
 ```json
 {
   "mcpServers": {
     "git": {
       "command": "python",
       "args": ["-m", "mcp_server_git"]
-    },
-    
-    "github": {
-      "command": "npx",
-      "args": ["-y", "@anthropics/mcp-server-github"],
-      "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "your_github_token_here"
-      }
-    },
-    
-    "sqlite": {
-      "command": "python",
-      "args": ["-m", "mcp_server_sqlite", "--db-path", "./data.db"]
-    },
-    
-    "weather": {
-      "type": "sse",
-      "url": "https://weather-mcp.example.com",
-      "headers": {
-        "Authorization": "Bearer YOUR_API_KEY"
-      }
     }
   }
 }
 ```
 
-Let me explain each part:
+### Best Practices
 
-**Server Name** (`"git"`, `"github"`, etc.)
-- This is what you'll reference when asking Claude to use it
-- Can be any name you choose
+**Do this**:
+- Keep `.mcp.json` in git
+- Use environment variables for secrets: `export API_KEY="..."`
+- Start with 1-2 servers
+- Test servers: `python -m mcp_server_git` (should start without errors)
 
-**For Local (Stdio) Servers**:
+**Don't do this**:
+- Hardcode API keys in `.mcp.json`
+- Add too many servers (slows startup)
+- Commit secrets to git
+
+### Troubleshooting
+
+**Server won't connect?**
+1. Install it: `pip install mcp-server-git` (or `npm install`, `uvx`, etc.)
+2. Test: `python -m mcp_server_git` (should start without errors)
+3. Restart Claude Code
+4. Check `~/.claude/logs/mcp.log` for errors
+
+---
+
+## Hooks in Claude Code
+
+**What are Hooks?**
+
+Hooks are automated actions that run before or after tool execution in Claude Code. They let you run custom scripts or commands at specific lifecycle events (e.g., before/after Bash commands, file writes, etc.).
+
+**Common Hook Types:**
+- **PreToolUse**: Runs BEFORE a tool executes (can block if it fails)
+- **PostToolUse**: Runs AFTER a tool succeeds
+- **PreCompact**: Runs before conversation compaction
+
+### What I Learned
+
+During hands-on experimentation with hooks, I discovered:
+
+1. **Hook Configuration**: Hooks are defined in `.claude/settings.json` with a matcher (tool name) and command to execute
+2. **File Mode Matters**: Scripts using append mode (`'a'`) accumulate output on each run; write mode (`'w'`) overwrites
+3. **Hook Execution**: PreToolUse hooks execute before the matched tool, useful for setup/validation tasks
+4. **Multiple Runs**: Each tool invocation triggers the hook, so output accumulates over multiple sessions
+5. **Practical Use Case**: Created PreTool and PostTool hooks to automatically generate tracking files (`pre_script.txt`, `post_script.txt`) on Bash/Write operations
+
+**Example Setup:**
 ```json
 {
-  "command": "python",           // What interpreter to use
-  "args": ["-m", "mcp_server_git"],  // What to run
-  "env": {}                       // Optional: environment variables
-}
-```
-
-- `"command"`: The executable on your system (python, node, npx, etc.)
-- `"args"`: Arguments passed to that command (like `python -m mcp_server_git`)
-- `"env"`: Optional environment variables (secrets, API keys, paths)
-
-**For Remote (HTTP/SSE) Servers**:
-```json
-{
-  "type": "sse",                  // Server-Sent Events protocol
-  "url": "https://...",           // Full URL to the server
-  "headers": {                    // HTTP headers (auth, etc.)
-    "Authorization": "Bearer ..."
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "python .claude/hooks/pre_script.py",
+        "timeout": 30
+      }]
+    }]
   }
 }
 ```
 
-#### Step 3: Install Required Server Software
-
-Before you can use a server, you need to install it. Here are common examples:
-
-**Git MCP Server**:
-```bash
-pip install mcp-server-git
-# or if using npm:
-npm install -g @anthropics/mcp-server-git
-```
-
-**GitHub MCP Server** (Node.js):
-```bash
-npm install -g @anthropics/mcp-server-github
-```
-
-**SQLite MCP Server**:
-```bash
-pip install mcp-server-sqlite
-```
-
-**Custom Server** (if you wrote one):
-```bash
-# Just make sure it's executable
-chmod +x ./my_mcp_server.py
-```
-
-#### Step 4: Start Claude Code and Approve Servers
-
-When you run Claude Code with `.mcp.json` present:
-
-```bash
-claude code
-```
-
-Claude Code will show:
-```
-⚠️  New MCP servers found. Do you want to enable them?
-  ✓ git
-  ✓ github  
-  ✓ sqlite
-```
-
-Choose:
-- **Approve all** if you trust them all
-- **Approve individually** for security
-- **Skip** to disable for now
-
-#### Step 5: Use the Servers
-
-Once approved, just ask Claude naturally:
-
-```bash
-$ claude code
-> List all commits from this week
-> Create a GitHub issue for the bug we just found
-> Query the database for users created today
-```
-
-Claude will automatically use the right MCP server for each request.
-
-### Creating Your Own MCP Server (Beginner Example)
-
-Let's create a simple MCP server that tells you the current time:
-
-**File: `my_time_server.py`**
-
-```python
-#!/usr/bin/env python3
-"""
-Simple MCP server that provides time-related tools
-"""
-
-import json
-import sys
-import datetime
-
-def process_request(request):
-    """Handle incoming JSON-RPC requests from Claude Code"""
-    
-    method = request.get("method")
-    
-    if method == "initialize":
-        # Claude Code is asking what capabilities this server has
-        return {
-            "result": {
-                "name": "time-server",
-                "version": "1.0.0",
-                "tools": [
-                    {
-                        "name": "get_current_time",
-                        "description": "Get the current time",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "timezone": {
-                                    "type": "string",
-                                    "description": "Timezone (e.g., 'UTC', 'US/Eastern')"
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "name": "get_date",
-                        "description": "Get today's date",
-                        "inputSchema": {"type": "object"}
-                    }
-                ]
-            }
-        }
-    
-    elif method == "get_current_time":
-        # Claude wants to know the current time
-        args = request.get("params", {})
-        current_time = datetime.datetime.now().strftime("%H:%M:%S")
-        return {
-            "result": f"Current time: {current_time}"
-        }
-    
-    elif method == "get_date":
-        # Claude wants today's date
-        today = datetime.datetime.now().strftime("%Y-%m-%d")
-        return {
-            "result": f"Today's date: {today}"
-        }
-    
-    else:
-        return {"error": f"Unknown method: {method}"}
-
-def main():
-    """Read requests from stdin, process them, write responses to stdout"""
-    for line in sys.stdin:
-        try:
-            request = json.loads(line)
-            response = process_request(request)
-            print(json.dumps(response))
-            sys.stdout.flush()
-        except Exception as e:
-            print(json.dumps({"error": str(e)}))
-            sys.stdout.flush()
-
-if __name__ == "__main__":
-    main()
-```
-
-**Register it in `.mcp.json`**:
-
-```json
-{
-  "mcpServers": {
-    "my-time-server": {
-      "command": "python",
-      "args": ["./my_time_server.py"]
-    }
-  }
-}
-```
-
-**Use it**:
-```bash
-$ claude code
-> What time is it?
-[Claude calls your MCP server's get_current_time tool]
-> Today's date?
-[Claude calls your MCP server's get_date tool]
-```
-
-### Understanding Resources vs Tools
-
-**Resources** = Read-only information Claude can request
-- Example: Git commit history, file contents, API documentation
-- Claude asks: "Show me this resource"
-- Server responds: "Here's the data"
-
-**Tools** = Actions Claude can perform
-- Example: Create a git commit, send a Slack message, update a database row
-- Claude asks: "Please call this tool with these arguments"
-- Server executes the action and returns the result
-
-Most beginner servers start with tools. Resources come later when you want Claude to inspect larger datasets efficiently.
-
-### Troubleshooting MCP Connection Issues
-
-**Problem**: MCP server connection fails or times out
-
-**Solution Steps**:
-
-1. **Verify the server is installed**:
-   ```bash
-   python -m mcp_server_git --help
-   # or
-   npm list -g @anthropics/mcp-server-git
-   ```
-
-2. **Test manually**:
-   ```bash
-   # Start the server in another terminal
-   python -m mcp_server_git
-   
-   # If it starts without errors, it's working
-   ```
-
-3. **Reload Claude Code configuration**:
-   ```bash
-   # In Claude Code, run:
-   /hooks
-   # This reloads all MCP configurations
-   ```
-
-4. **Check server logs**:
-   ```bash
-   # MCP logs are usually here:
-   ~/.claude/logs/
-   
-   # Look for errors
-   cat ~/.claude/logs/mcp.log
-   ```
-
-5. **Restart Claude Code**:
-   ```bash
-   # Exit and restart
-   exit
-   claude code
-   ```
-
-6. **For HTTP/SSE servers**, verify connectivity:
-   ```bash
-   # Check if the server is running
-   curl https://your-mcp-server-url/health
-   ```
-
-### Common Pre-built MCP Servers
-
-Here are popular servers you can use:
-
-| Server | Install | Use Case |
-|--------|---------|----------|
-| **git** | `pip install mcp_server_git` | Git operations (commits, diffs, logs) |
-| **github** | `npm install -g @anthropics/mcp-server-github` | GitHub PRs, issues, workflows |
-| **sqlite** | `pip install mcp_server_sqlite` | Query local SQLite databases |
-| **postgres** | `pip install mcp_server_postgres` | PostgreSQL database queries |
-| **slack** | `npm install -g @anthropics/mcp-server-slack` | Send/read Slack messages |
-| **playwright** | Built into Claude Code plugin | Web automation, screenshots |
-| **file-search** | `npm install -g @anthropics/mcp-server-file-search` | Index & search files |
+**Reference:** [Claude Code Hooks Guide](https://code.claude.com/docs/en/hooks-guide#automate-actions-with-hooks)
 
 ---
